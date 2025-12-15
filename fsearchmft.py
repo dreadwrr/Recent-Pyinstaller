@@ -1,12 +1,11 @@
 
-#  Mft parallel                12/08/2025
+#  Mft parallel                12/14/2025
 #  Certain fields are different from fsearch and fsearchps1. The MFT doesnt have to walk the filesystem.
 # C# and rust parsers are efficient. This can be invaluable in locating a file or file(s).
 import logging
 import multiprocessing
 import random
 import os
-import pandas as pd
 import traceback
 from datetime import datetime
 from pathlib import Path
@@ -54,15 +53,13 @@ def process_line(line, checksum, CACHE_F):
         return ("Nosuchfile", mtime, mtime, file_path)
     if mtime is None:
         return None
-    if isinstance(mtime, pd.Timestamp):
-        mtime = mtime.to_pydatetime()
 
     pathf = Path(file_path)
 
     if checksum:
 
         if size is not None and size > CSZE:
-            mod_time = mtime.strftime(fmt)
+            mod_time = mtime.timestamp()  # mtime.strftime(fmt)
             cached = get_cached(CACHE_F, size, mod_time, file_path)
             if cached is None:
                 checks = calculate_checksum(file_path)
@@ -92,7 +89,7 @@ def process_line(line, checksum, CACHE_F):
 
     return (
         label,
-        mtime,  # .replace(microsecond=0)
+        mtime.replace(microsecond=0),
         file_path,
         ctime,
         inode,
@@ -105,7 +102,8 @@ def process_line(line, checksum, CACHE_F):
         mode,
         cam,
         lastmodified,
-        hardlink
+        hardlink,
+        str(mtime.timestamp())
     )
 
 
@@ -147,7 +145,7 @@ def process_line_worker(chunk_args):
     return results
 
 
-def process_lines(lines, model_type, checksum, table, logging_values, CACHE_F, iqt=False, strt=20, endp=60):
+def process_lines(lines, model_type, checksum, logging_values, CACHE_F, iqt=False, strt=20, endp=60):
 
     special_k = -1
 
@@ -177,10 +175,10 @@ def process_lines(lines, model_type, checksum, table, logging_values, CACHE_F, i
 
     results = [item for sublist in ck_results if sublist is not None for item in sublist]
 
-    return process_res(results, table, CACHE_F, "fsearchMFT") if results else (None, None)  # fsearch.py
+    return process_res(results, CACHE_F, "fsearchMFT") if results else (None, None)  # fsearch.py
 
 
-def process_find_lines(lines, model_type, checksum, table, logging_values, CACHE_F, iqt=False, strt=20, endp=60):
-    return process_lines(lines, model_type, checksum, table, logging_values, CACHE_F, iqt, strt, endp)
+def process_find_lines(lines, model_type, checksum, logging_values, CACHE_F, iqt=False, strt=20, endp=60):
+    return process_lines(lines, model_type, checksum, logging_values, CACHE_F, iqt, strt, endp)
 #
 # End parallel #

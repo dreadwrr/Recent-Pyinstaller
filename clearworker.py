@@ -78,7 +78,7 @@ class ClearWorker(Worker):
 
                             if filter_literal is not None and cache_patterns is not None:
 
-                                if clear_cache(conn, cur, self.usr, cache_patterns):
+                                if clear_cache(conn, cur, cache_patterns):
                                     rlt = 0
                                     try:
                                         reset_csvliteral(self.flth, filter_literal)

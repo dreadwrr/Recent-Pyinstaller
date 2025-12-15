@@ -1,4 +1,4 @@
-# Get metadata hash of files and return array                       12/08/2025
+# Get metadata hash of files and return array                       12/14/2025
 import logging
 import multiprocessing
 import os
@@ -20,7 +20,6 @@ def process_line(line, checksum, updatehlinks, CACHE_F):
     label = "Sortcomplete"
     CSZE = 1024 * 1024
 
-    ctime = None
     checks = None
     cache_owner = None
     cache_domain = None
@@ -44,20 +43,20 @@ def process_line(line, checksum, updatehlinks, CACHE_F):
     if not os.path.exists(file_path):
         return None
 
-    mtime_frm = fsearchfnts.parse_iso8601(mod_time)
+    mtime = fsearchfnts.parse_iso8601(mod_time)
     if not os.path.isfile(file_path):
-        if not mtime_frm:
+        if not mtime:
             mt = datetime.now().strftime(fmt)
         else:
-            mt = mtime_frm.replace(microsecond=0)
+            mt = mtime.replace(microsecond=0)
         return ("Nosuchfile", mt, mt, file_path)
-    if mtime_frm is None:
+    if mtime is None:
         logging.debug("process_line mtime missing from: %s", line)
         return None
 
     if checksum:
         if size_int is not None and size_int > CSZE:
-            cached = fsearchfnts.get_cached(CACHE_F, size_int, mod_time, file_path)
+            cached = fsearchfnts.get_cached(CACHE_F, size_int, mtime.timestamp(), file_path)
             if cached is None:
                 checks = fsearchfnts.calculate_checksum(file_path)
                 if checks:
@@ -72,7 +71,7 @@ def process_line(line, checksum, updatehlinks, CACHE_F):
     # pywin32
     inode, hardlink, ctime_pywin = fsearchfnts.get_file_id(file_path, updatehlinks)
     if inode == "not_found":
-        mt = mtime_frm.replace(microsecond=0)
+        mt = mtime.replace(microsecond=0)
         logging.debug("process_line no such file after checksum return from py32win %s : %s", file_path, line)
         return ("Nosuchfile", mt, mt, file_path)
     if not ctime_pywin:
@@ -96,14 +95,11 @@ def process_line(line, checksum, updatehlinks, CACHE_F):
     # except Exception as e:
     #     pass
 
-    mtime = mtime_frm.replace(microsecond=0)
-    ctime_frm = fsearchfnts.parse_iso8601(change_time)
-    if ctime_frm:
-        ctime = ctime_frm.replace(microsecond=0)
-        if ctime > mtime:
-            lastmodified = mtime
-            mtime = ctime
-            cam = "y"
+    ctime = fsearchfnts.parse_iso8601(change_time)
+    if ctime and ctime > mtime:
+        lastmodified = mtime
+        mtime = ctime
+        cam = "y"
     else:
         logging.debug("process_line creation time was None at casmod check: %s : %s", file_path, line)
 
@@ -112,7 +108,7 @@ def process_line(line, checksum, updatehlinks, CACHE_F):
 
     return (
         label,
-        mtime,
+        mtime.replace(microsecond=0),
         file_path,
         ctime.strftime(fmt) if ctime is not None else None,
         inode,
@@ -125,7 +121,8 @@ def process_line(line, checksum, updatehlinks, CACHE_F):
         mode,
         cam,
         lastmodified.strftime(fmt) if lastmodified is not None else None,
-        hardlink
+        hardlink,
+        str(mtime.timestamp())
     )
 
 
@@ -166,7 +163,7 @@ def process_line_worker(chunk_args):
     return results
 
 
-def process_lines(lines, model_type, checksum, updatehlinks, table, logging_values, CACHE_F, iqt=False, strt=20, endp=60):
+def process_lines(lines, model_type, checksum, updatehlinks, logging_values, CACHE_F, iqt=False, strt=20, endp=60):
 
     special_k = -1
 
@@ -197,10 +194,10 @@ def process_lines(lines, model_type, checksum, updatehlinks, table, logging_valu
 
     results = [item for sublist in ck_results if sublist is not None for item in sublist]
 
-    return process_res(results, table, CACHE_F, "fsearchPS1") if results else (None, None)
+    return process_res(results, CACHE_F, "fsearchPS1") if results else (None, None)
 
 
-def process_find_lines(lines, model_type, checksum, updatehlinks, table, logging_values, CACHE_F, iqt=False, strt=20, endp=60):
-    return process_lines(lines, model_type, checksum, updatehlinks, table, logging_values, CACHE_F, iqt, strt, endp)
+def process_find_lines(lines, model_type, checksum, updatehlinks, logging_values, CACHE_F, iqt=False, strt=20, endp=60):
+    return process_lines(lines, model_type, checksum, updatehlinks, logging_values, CACHE_F, iqt, strt, endp)
 #
 # End parallel #

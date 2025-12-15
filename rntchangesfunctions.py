@@ -1,4 +1,5 @@
-# 12/08/2025           developer buddy core
+# 12/14/2025           developer buddy core
+import csv
 import ctypes
 import getpass
 import glob
@@ -435,7 +436,7 @@ def find_cmdhelp(s_path, mmin, USR):
 # downloaded or copied files with preserved metadata.
 
 
-def find_files(find_command, DRIVETYPE, usr_areas, file_type, RECENT, COMPLETE, init, checksum, updatehlinks, cfr, FEEDBACK, logging_values, end, cstart, search_start_dt, table='logs', iqt=False, strt=20.00, endp=60.00):
+def find_files(find_command, DRIVETYPE, usr_areas, file_type, RECENT, COMPLETE, init, checksum, updatehlinks, cfr, FEEDBACK, logging_values, end, cstart, search_start_dt, iqt=False, strt=20.00, endp=60.00):
 
     file_entries = []
     try:
@@ -462,9 +463,8 @@ def find_files(find_command, DRIVETYPE, usr_areas, file_type, RECENT, COMPLETE, 
     file_entries = [entry.decode(errors='backslashreplace') for entry in output.split(b'\0') if entry]
     file_entries = conv_cdrv(file_entries)  # /mnt/c to C:\
 
-    if table == 'logs':
-        if usr_areas:
-            file_entries += usr_areas  # add user dirs for full accuracy
+    if usr_areas:
+        file_entries += usr_areas  # add user dirs for full accuracy
 
     if file_type == "main":
         if FEEDBACK:  # scrolling terminal look
@@ -480,13 +480,13 @@ def find_files(find_command, DRIVETYPE, usr_areas, file_type, RECENT, COMPLETE, 
     if init and checksum:
         cprint.cyan('Running checksum.')
         cstart = time.time()
-    RECENT, COMPLETE = pl1.process_find_lines(file_entries, DRIVETYPE, checksum, updatehlinks, file_type, search_start_dt, table, logging_values, cfr, iqt, strt, endp)
+    RECENT, COMPLETE = pl1.process_find_lines(file_entries, DRIVETYPE, checksum, updatehlinks, file_type, search_start_dt, logging_values, cfr, iqt, strt, endp)
     return RECENT, COMPLETE, end, cstart
 
 
 # Main windows search. creation time or modified > cutoff time - default. uses powershell
 
-def find_ps1(command, DRIVETYPE, RECENT, COMPLETE, mergeddb, init, checksum, updatehlinks, cfr, FEEDBACK, logging_values, end, cstart, table='logs', iqt=False, strt=20, endp=60):  # FEEDBACK,  handled in .ps1 script
+def find_ps1(command, DRIVETYPE, RECENT, COMPLETE, mergeddb, init, checksum, updatehlinks, cfr, FEEDBACK, logging_values, end, cstart, iqt=False, strt=20, endp=60):  # FEEDBACK,  handled in .ps1 script
 
     def get_recent_changes(cursor, file_table):
         allowed_tables = ('files')
@@ -539,13 +539,13 @@ def find_ps1(command, DRIVETYPE, RECENT, COMPLETE, mergeddb, init, checksum, upd
             out_text = "\n" + out_text
         cprint.cyan(out_text)
         cstart = time.time()
-    RECENT, COMPLETE = pl3.process_find_lines(file_entries, DRIVETYPE, checksum, updatehlinks, table, logging_values, cfr, iqt, strt, endp)
+    RECENT, COMPLETE = pl3.process_find_lines(file_entries, DRIVETYPE, checksum, updatehlinks, logging_values, cfr, iqt, strt, endp)
     return RECENT, COMPLETE, end, cstart
 
 
 # calibrate search using Mft
 
-def find_mft(DRIVETYPE, RECENT, COMPLETE, init, checksum, cfr, FEEDBACK, logging_values, end, cstart, search_time, table='logs', iqt=False, strt=20, endp=60):
+def find_mft(DRIVETYPE, RECENT, COMPLETE, init, checksum, cfr, FEEDBACK, logging_values, end, cstart, search_time, iqt=False, strt=20, endp=60):
 
     p = search_time * 60
 
@@ -581,7 +581,7 @@ def find_mft(DRIVETYPE, RECENT, COMPLETE, init, checksum, cfr, FEEDBACK, logging
     if init and checksum:
         cprint.cyan('\nRunning checksum.')
         cstart = time.time()
-    RECENT, COMPLETE = pl2.process_find_lines(file_entries, DRIVETYPE, checksum, table, logging_values, cfr, iqt, prog_v, endp)  # multiprocess
+    RECENT, COMPLETE = pl2.process_find_lines(file_entries, DRIVETYPE, checksum, logging_values, cfr, iqt, prog_v, endp)  # multiprocess
     return RECENT, COMPLETE, end, cstart
 
 
@@ -607,7 +607,7 @@ def str_to_bool(x):
     return str(x).strip().lower() in ("true", "1")
 
 
-def search_Mft(csv_p, compt, logger, iqt=False):  # tmn  csv            nov5/2025
+def search_Mft(csv_p, compt, logger, iqt=False):  # tmn  csv            dec13/2025
 
     time_field = "LastModified0x10"
     ctime_field = "Created0x10"
@@ -625,6 +625,7 @@ def search_Mft(csv_p, compt, logger, iqt=False):  # tmn  csv            nov5/202
         "SourceFile"
     ]
     try:
+
         csv_p.seek(0)
         df = pd.read_csv(
             csv_p, names=columns,
@@ -632,14 +633,13 @@ def search_Mft(csv_p, compt, logger, iqt=False):  # tmn  csv            nov5/202
             converters={col: str_to_bool for col in bool_columns}
         )
 
-
         dt_cols = [time_field, ctime_field, atime_field]
 
         for col in dt_cols:  # convert utc aware object
             df[col] = pd.to_datetime(df[col], errors='coerce').dt.tz_localize('UTC')
 
-
         df = df.dropna(subset=[time_field])
+
         #  ~ is not
         recent_files = df[
             (df['InUse']) &
@@ -648,7 +648,6 @@ def search_Mft(csv_p, compt, logger, iqt=False):  # tmn  csv            nov5/202
             ((df[time_field] >= compt) | (df[ctime_field] >= compt))
         ].copy()
 
-
         recent_files['cam'] = None
         mask_cam = recent_files[ctime_field] > recent_files[time_field]
         recent_files.loc[mask_cam, 'cam'] = 'y'
@@ -656,10 +655,8 @@ def search_Mft(csv_p, compt, logger, iqt=False):  # tmn  csv            nov5/202
         recent_files.loc[mask_cam, 'LastModified'] = recent_files.loc[mask_cam, time_field]
         recent_files.loc[mask_cam, time_field] = recent_files.loc[mask_cam, ctime_field]
 
-        dt_cols = [time_field, ctime_field, atime_field]
-        for col in dt_cols:
-            recent_files[col] = recent_files[col].dt.tz_convert(local_tz).dt.tz_localize(None)
-            recent_files[col] = recent_files[col].dt.floor('s')
+        recent_files[time_field] = recent_files[time_field].dt.tz_convert(local_tz).dt.tz_localize(None).dt.to_pydatetime()
+        # recent_files[col] = recent_files[col].dt.floor('s')
 
         recent_files['EntryNumber'] = pd.to_numeric(recent_files['EntryNumber'], errors='coerce')
         recent_files['SequenceNumber'] = pd.to_numeric(recent_files['SequenceNumber'], errors='coerce')
@@ -669,9 +666,8 @@ def search_Mft(csv_p, compt, logger, iqt=False):  # tmn  csv            nov5/202
         recent_files['EntryNumber'] = recent_files['EntryNumber'].astype('int64')
         recent_files['SequenceNumber'] = recent_files['SequenceNumber'].astype('int64')
 
-        recent_files['inode'] = (recent_files['SequenceNumber'] << 48) | recent_files['EntryNumber']   # frn
-        # recent_files['inode'] = np.left_shift(recent_files['SequenceNumber'], 48) | recent_files['EntryNumber'] # frn
-
+        recent_files['inode'] = (recent_files['SequenceNumber'] << 48) | recent_files['EntryNumber']
+        # recent_files['inode'] = np.left_shift(recent_files['SequenceNumber'], 48) | recent_files['EntryNumber']  # frn
 
         recent_files = recent_files.dropna(subset=['ParentPath', 'FileName'])
         recent_files = get_full_path(recent_files)
@@ -679,16 +675,17 @@ def search_Mft(csv_p, compt, logger, iqt=False):  # tmn  csv            nov5/202
         dt_cols = [ctime_field, atime_field]
         for col in dt_cols + ['LastModified']:
             recent_files[col] = pd.to_datetime(recent_files[col], errors='coerce')  # ensure datetime
+            recent_files[col] = recent_files[col].dt.tz_convert(local_tz).dt.tz_localize(None)
             recent_files[col] = recent_files[col].dt.strftime("%Y-%m-%d %H:%M:%S")
-
+            recent_files[col] = recent_files[col].where(recent_files[col].notna(), None)
 
         recent_files['ReferenceCount'] = pd.to_numeric(recent_files['ReferenceCount'], errors='coerce')
-
         recent_files['ReferenceCount'] = recent_files['ReferenceCount'].apply(
             lambda x: x - 1 if x is not None else None
         )
 
         recent_files['FileSize'] = pd.to_numeric(recent_files['FileSize'], errors='coerce').astype('Int64')
+
         recent_files = recent_files.replace({pd.NA: None})
 
         SORTCOMPLETE = list(zip(
@@ -1622,6 +1619,35 @@ def set_gpg(lclapp_data, sub_dir='gpg'):
     os.environ["GNUPGHOME"] = str(gnupg_home)
     return gnupg_home
 # End Database section
+
+
+def decr_ctime(CACHE_F):
+    if not CACHE_F or not os.path.isfile(CACHE_F):
+        return {}
+
+    csv_path = decrm(CACHE_F)
+    if not csv_path:
+        print(f"Unable to retrieve cache file {CACHE_F} quitting.")
+        return 1
+
+    cfr_src = {}
+    reader = csv.DictReader(StringIO(csv_path), delimiter='|')
+
+    for row in reader:
+        root = row.get('root')
+        if not root:
+            continue
+
+        modified_ep = row.get('modified_ep') or ''
+        cfr_src.setdefault(root, {})[modified_ep] = {
+            "checksum": row.get('checksum') or '',
+            "size": row.get('size') or '',
+            "modified_time": row.get('modified_time') or '',
+            "owner": row.get('owner') or '',
+            "domain": row.get('domain') or ''
+        }
+
+    return cfr_src
 
 
 def run_pwsh(command):

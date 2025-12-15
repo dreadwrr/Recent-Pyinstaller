@@ -1,5 +1,5 @@
 #!/bin/env python3
-#   manipulate array before database srg and send output to diff file 12/02/2025
+#   manipulate array before database srg and send output to diff file 12/14/2025
 from datetime import datetime
 import os
 from pyfunctions import parse_datetime
@@ -10,10 +10,13 @@ from rntchangesfunctions import filter_lines_from_list
 # the time format is different in rout log file use this function
 def parse_rout(line):
     parts = line.strip().split(None, 3)
-    if len(parts) < 3:
-        return datetime.min
-    tsmp = f'{parts[1]} {parts[2]}'
-    return parse_datetime(tsmp)
+    if len(parts) > 2:
+        tsmp = f'{parts[1]} {parts[2]}'
+        key_value = parse_datetime(tsmp)
+        if key_value:
+            return key_value
+    print("Invalid sort key in processha", line)
+    return datetime.min
 
 
 # preprocess diff file

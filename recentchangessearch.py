@@ -33,7 +33,6 @@
 #           2. The search is unfiltered and a filesearch is filtered.
 #           2. rnt search inverses the results. rnt.bat   ie for a standard search it will filter the results. For a file search it removes the filter.
 #  Also borrowed script features from various scripts on porteus forums
-import csv
 import os
 import processha
 import re
@@ -42,13 +41,13 @@ import sys
 import tempfile
 import time
 from datetime import datetime, timedelta  # , timezone,
-from io import StringIO
 from dirwalker import scan_system
 from filterhits import update_filter_csv
 from fsearchfnts import set_excl_dirs
 from processha import isdiff
 from pstsrg import main as pst_srg
 from pyfunctions import cprint
+from pyfunctions import dict_to_list_sys
 from pyfunctions import dict_string
 from pyfunctions import get_wdir
 from pyfunctions import is_integer
@@ -56,10 +55,10 @@ from pyfunctions import load_config
 from qtfunctions import setup_drive_settings
 from recentchangessearchparser import build_parser
 from rntchangesfunctions import build_tsv
+from rntchangesfunctions import decr_ctime
 from rntchangesfunctions import clear_logs
 from rntchangesfunctions import convertn
 from rntchangesfunctions import display
-from rntchangesfunctions import decrm
 from rntchangesfunctions import encrm
 from rntchangesfunctions import filter_lines_from_list
 from rntchangesfunctions import filter_output
@@ -79,7 +78,6 @@ from rntchangesfunctions import logic
 from rntchangesfunctions import mftec_is_cutoff
 from rntchangesfunctions import output_results_exit
 from rntchangesfunctions import removefile
-# from rntchangesfunctions import res_path
 from rntchangesfunctions import update_toml_setting
 
 # Globals
@@ -151,6 +149,12 @@ def main(argone, argtwo, USR, PWD, argf="bnk", method="", iqt=False, db_output=N
     filters_toml = appdata_local / "filter.toml"
     filters = load_config(filters_toml)
     filter_toml = filters.get("filter", None)  # _toml
+    cachermPATTERNS_toml = filters.get("cachermPATTERNS", None)
+
+    cachermPATTERNS = [
+        p.replace("{user}", USR)
+        for p in cachermPATTERNS_toml
+    ]
 
     filter_escaped = [
         p.replace("\\", "\\\\")
@@ -272,11 +276,8 @@ def main(argone, argtwo, USR, PWD, argf="bnk", method="", iqt=False, db_output=N
             if not genkey(email, email_name, TEMPD):
                 print("Failed to generate a gpg key. quitting")
                 return 1
-        if os.path.isfile(CACHE_F):
-            csv_path = decrm(CACHE_F, quiet=True)
-            if csv_path:
-                reader = csv.DictReader(StringIO(csv_path), delimiter='|')
-                cfr = list(reader)
+
+        cfr = decr_ctime(CACHE_F)
 
         start = time.time()
 
@@ -406,7 +407,7 @@ def main(argone, argtwo, USR, PWD, argf="bnk", method="", iqt=False, db_output=N
                 cmin_end = time.time()
                 cmin_start = current_time.timestamp()
                 cmin_offset = convertn(cmin_end - cmin_start, 60, 2)
-                mmin = ["-mmin", f"-{search_time + cmin_offset}"]
+                mmin = ["-mmin", f"-{search_time + cmin_offset:.2f}"]
                 find_command_mmin = F + PRUNE + mmin + TAIL
                 proval += 10
                 endval += 30
@@ -423,7 +424,9 @@ def main(argone, argtwo, USR, PWD, argf="bnk", method="", iqt=False, db_output=N
 
         if RECENT:
             if cfr:  # savecache
-                ctarget = dict_string(cfr)
+
+                data_to_write = dict_to_list_sys(cfr)
+                ctarget = dict_string(data_to_write)
 
                 nc_cfile = intst(dbtarget, compLVL)
 
@@ -656,7 +659,7 @@ def main(argone, argtwo, USR, PWD, argf="bnk", method="", iqt=False, db_output=N
 
             proval = 65
 
-            dbopt = pst_srg(db_output, dbtarget, basedir, DRIVETYPE, SORTCOMPLETE, COMPLETE, logging_values, rout, checksum, updatehlinks, cdiag, email, ANALYTICSECT, ps, indexCACHEDIR, CACHE_S, compLVL, mainl, USR, dcr=dcr, iqt=iqt, strt=proval, endp=endval)
+            dbopt = pst_srg(db_output, dbtarget, basedir, DRIVETYPE, SORTCOMPLETE, COMPLETE, cachermPATTERNS, logging_values, rout, checksum, updatehlinks, cdiag, email, ANALYTICSECT, ps, indexCACHEDIR, CACHE_S, compLVL, mainl, dcr=dcr, iqt=iqt, strt=proval, endp=endval)
             proval = endval + 1
             endval = 100
             if iqt:

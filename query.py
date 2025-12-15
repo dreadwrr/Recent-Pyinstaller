@@ -6,19 +6,16 @@ import tempfile
 from collections import Counter
 from datetime import datetime
 from pyfunctions import clear_conn
-from pyfunctions import get_delete_patterns
 from pyfunctions import is_integer
 from rntchangesfunctions import decr
 from rntchangesfunctions import getnm
 from rntchangesfunctions import cprint
 
 
-def clear_cache(conn, cur, usr, cache_patterns):
-
-    files_d = get_delete_patterns(usr, cache_patterns)
+def clear_cache(conn, cur, cache_patterns):
 
     try:
-        for filename_pattern in files_d:
+        for filename_pattern in cache_patterns:
             cur.execute("DELETE FROM logs WHERE filename LIKE ?", (filename_pattern,))
             cur.execute("DELETE FROM stats WHERE filename LIKE ?", (filename_pattern,))
             conn.commit()

@@ -1521,10 +1521,6 @@ class MainWindow(QMainWindow):
         self.proc.set_mcore(ismcore)  # cant stop until some point
 
         self.proc.start_pyprocess(str(self.myapp), ['dirwalker.py', 'build', self.dbopt, self.dbtarget, basedir, str(self.updatehlinks), CACHE_S, self.email, str(self.ANALYTICSECT), str(idx_drive), str(self.cacheidx), str(self.compLVL), 'True'], dbopt=self.dbopt, status_message=stsmsg)
-        # cmd = os.path.join(self.lclhome, "sysprofile.py")  find command script original
-        # self.proc = ProcessHandler()
-        # self.openp(180000)
-        # self.proc.start_pyprocess(cmd, [ self.dbopt, self.dbtarget, self.email, str(self.wsl) ])
 
     # fork build button pg2
     def build_idx(self):
@@ -1789,7 +1785,7 @@ class MainWindow(QMainWindow):
         # header.resizeSection(i, fixed_width)
 
         # maximum width 1000
-        if table != 'sys':
+        if table not in ('logs', 'sys'):
             header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
             for i in range(len(headers)):
                 width = header.sectionSize(i)
@@ -1797,7 +1793,7 @@ class MainWindow(QMainWindow):
                     header.resizeSection(i, 1000)
         else:
             # per-table per-column width list
-            column_widths = [60, 110, 900, 110, 130, 110, 215, 75, 50, 115, 115, 50, 50, 110, 70]
+            column_widths = [60, 110, 1100, 110, 130, 110, 215, 75, 50, 115, 115, 50, 50, 110, 70]
         # else:
             # column_widths = [100] * len(headers)
             for i, w in enumerate(column_widths):
@@ -2040,7 +2036,6 @@ class MainWindow(QMainWindow):
             if not has_sys_data(self.dbopt, self.ui.hudt, sys_tables[0], prompt_v, parent=self):
                 self.isexec = False
                 return
-        logging.debug("B")
         self.nc = intst(self.dbopt, self.compLVL)
         self.start_cleartrd()
         self.worker.status.connect(self.update_db_status)  # db label pg2
@@ -2053,7 +2048,6 @@ class MainWindow(QMainWindow):
             self.worker.complete.connect(lambda code, idx=idx: self.reload_drives_sn.emit(code, idx, drive))
 
         self.worker.complete.connect(lambda code: self.reload_sj_sn.emit(code, drive_idx, 'rmv'))
-        logging.debug("C")
         self._run_clear_task(self.worker.run_sysclear, [cache_s, sys_tables, cache_table, systimeche])
 
     #

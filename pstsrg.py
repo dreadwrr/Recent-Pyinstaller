@@ -6,6 +6,7 @@ import sys
 import traceback
 from dirwalker import index_system
 from hanlyparallel import hanly_parallel
+from pyfunctions import collision
 from pyfunctions import cprint
 from query import create_logs_table
 from query import create_sys_table
@@ -67,10 +68,12 @@ def create_db(database, sys_tables):
     conn.close()
 
 
-def main(dbopt, dbtarget, basedir, model_type, xdata, COMPLETE, logging_values, rout, checksum, updatehlinks, cdiag, email, ANALYTICSECT, ps, indexCACHEDIR, CACHE_S, compLVL, mainl, user='guest', dcr=False, iqt=False, strt=65, endp=90):
+def main(dbopt, dbtarget, basedir, model_type, xdata, COMPLETE, cachermPATTERNS, logging_values, rout, checksum, updatehlinks, cdiag, email, ANALYTICSECT, ps, indexCACHEDIR, CACHE_S, compLVL, mainl, dcr=False, iqt=False, strt=65, endp=90):
 
     outfile = getnm(dbtarget, '.db')
+    scr = os.path.join(mainl, 'scr')
     cerr = os.path.join(mainl, "cerr")
+
     sys_tables, _ = get_idx_tables(basedir)  # default sys and sys2 - ie for r:\\    sys_r and sys2_r
 
     parsed = []
@@ -122,8 +125,6 @@ def main(dbopt, dbtarget, basedir, model_type, xdata, COMPLETE, logging_values, 
 
     c = conn.cursor()
 
-    parsed = xdata
-
     drive_sys_table = sys_tables[0]
     if table_has_data(conn, drive_sys_table):
         is_ps = True
@@ -141,14 +142,14 @@ def main(dbopt, dbtarget, basedir, model_type, xdata, COMPLETE, logging_values, 
         elif ps and not iqt:
             print('Sys profile requires the setting checksum to index')
     # Log
-    if parsed:
+    if xdata:
 
         if goahead:  # Hybrid analysis. Skip first pass ect.
 
             try:
                 if iqt:
                     print(f"Progress: {strt}", flush=True)
-                hanly_parallel(model_type, rout, parsed, checksum, cdiag, dbopt, is_ps, user, dbtarget, logging_values[1], sys_tables, mainl, iqt, strt, endp)
+                hanly_parallel(model_type, rout, scr, cerr, xdata, cachermPATTERNS, checksum, cdiag, dbopt, is_ps, logging_values[1], sys_tables, iqt, strt, endp)
 
                 x = os.cpu_count()
                 if x:
@@ -162,14 +163,22 @@ def main(dbopt, dbtarget, basedir, model_type, xdata, COMPLETE, logging_values, 
                 if ANALYTICSECT:
                     cprint.green('Hybrid analysis on')
 
-
             except Exception as e:
                 print(f"hanlydb failed to process : {type(e).__name__} : {e} \n{traceback.format_exc().strip()}", file=sys.stderr)
 
-
         try:
-            insert(parsed, conn, c, "logs", "hardlinks")
+            for record in xdata:
+                parsed.append(record[:14])
 
+            insert(parsed, conn, c, "logs", "hardlinks")
+            # Check for hash collisions
+            if checksum and cdiag:
+                ccheck = collision(c, ps, sys_tables)
+                if ccheck:
+                    with open(scr, "a", encoding="utf-8") as f:
+                        for row in ccheck:
+                            a_filename, b_filename, checksum = row
+                            print(f"COLLISION: {a_filename} , {b_filename} | Checksum: {checksum} |", file=f)
             count = getcount(c)
             if count % 10 == 0:
                 print(f'{count + 1} searches in gpg database')
@@ -218,7 +227,6 @@ def main(dbopt, dbtarget, basedir, model_type, xdata, COMPLETE, logging_values, 
     else:
         res = 1
         print('There is a problem with the database.')
-
 
     if dcr and res != 3:
         removefile(dbopt)
