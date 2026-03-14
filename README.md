@@ -1,6 +1,5 @@
 # Recent-Pyinstaller
-Pyinstaller source code for Recent changes <br><br>
-Optionally start a venv <br>
-pip install pyinstaller <br>
-pyinstaller main.spec <br>
+Pyinstaller resources for recentchanges <br><br>
+if you built a binary from the source code these .bat files change the call site <br>
+to main.exe <br>
 
