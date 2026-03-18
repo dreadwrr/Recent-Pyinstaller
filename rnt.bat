@@ -1,5 +1,16 @@
+
 @echo off
 
-rem rntexit /b
+rem rnt invert search switch
+set PYTHONUNBUFFERED="1"
+set "CMD_LINE=%~f0"
+rem If no arguments were passed, just prepend and call
+rem 300 seconds are used as no args means 5 minutes
+if "%~1"=="" (
+    "%~dp0main" 300 inv
+    exit /b
+)
 
+rem search
+rem If arguments were provided, prepend and pass arguments and call
 "%~dp0main" %* inv
