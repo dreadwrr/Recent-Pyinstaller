@@ -1,4 +1,3 @@
-
 @echo off
 
 rem rnt invert search switch
