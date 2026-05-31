@@ -1,18 +1,20 @@
 Pyinstaller resources for recentchanges <br><br>
 # Recent-Pyinstaller
 
+if you built a binary from the source code these .bat go with pyintaller <br>
+they point to main from Windows Setup release <br><br>
+
 The size of the app can be reduce with upx placed in the directory before build <br>
 upx https://github.com/upx/upx <br><br>
 
-following can be removed from build <br>
+also the following can be removed from build <br>
 dist\main\_internal\PySide6\opengl32sw.dll <br>
 dist\main\_internal\PySide6\Qt6Qmd.dll <br>
 dist\main\_internal\PySide6\Qt6Network.dll <br>
 dist\main\_internal\PySide6\Qt6OpenGl.dll <br><br>
 
 Will post any updates or findings here regarding pyinstaller and also will look into nuitka instructions <br><br>
-if you built a binary from the source code these .bat go with pyintaller <br>
-they point to main from Windows Setup release <br><br>
+
 
 main.py is not longer needed <br>
 /src is no longer needed <br><br>
