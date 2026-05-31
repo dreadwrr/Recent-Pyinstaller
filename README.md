@@ -5,7 +5,7 @@ Will post any updates or findings here regarding pyinstaller <br>
 if you built a binary from the source code these .bat go with pyintaller <br>
 they point to main <br><br>
 
-The size of the app can be reduce with upx placed in the directory before build upx-5.1.1-win64.zip <br>
+The size of the app can be reduced with upx placed in the directory before build. look for upx-5.1.1-win64.zip <br>
 upx https://github.com/upx/upx <br><br>
 
 also the following can be removed from build <br>
