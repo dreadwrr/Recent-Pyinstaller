@@ -1,6 +1,6 @@
 Pyinstaller resources for recentchanges <br><br>
-# Recent-Pyinstaller <br><br>
-
+# Recent-Pyinstaller <br>
+<br>
 if you built a binary from the source code these .bat go with pyintaller <br>
 they point to main from Windows Setup release <br><br>
 
