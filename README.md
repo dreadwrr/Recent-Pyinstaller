@@ -2,7 +2,7 @@ Pyinstaller resources for recentchanges <br><br>
 # Recent-Pyinstaller <br>
 <br>
 if you built a binary from the source code these .bat go with pyintaller <br>
-they point to main from Windows Setup release <br><br>
+they point to main <br><br>
 
 The size of the app can be reduce with upx placed in the directory before build <br>
 upx https://github.com/upx/upx <br><br>
