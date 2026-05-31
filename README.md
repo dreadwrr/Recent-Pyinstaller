@@ -1,5 +1,9 @@
-# Recent-Pyinstaller
 Pyinstaller resources for recentchanges <br><br>
+# Recent-Pyinstaller
+
+The size of the app can be reduce with upx placed in the directory before build <br>
+upx https://github.com/upx/upx <br><br>
+
 following can be removed from build <br>
 dist\main\_internal\PySide6\opengl32sw.dll <br>
 dist\main\_internal\PySide6\Qt6Qmd.dll <br>
