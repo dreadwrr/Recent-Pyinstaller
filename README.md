@@ -19,6 +19,5 @@ dist\main\_internal\PySide6\Qt6OpenGl.dll <br><br>
 
 main.py is not longer needed <br>
 /src is no longer needed <br><br>
-upx.exe win64 from github can be put in the folder to compress the executable <br><br>
 
 ![Alt text](https://i.imgur.com/ty6b3Th.png)
