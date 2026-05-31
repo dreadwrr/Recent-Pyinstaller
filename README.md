@@ -1,5 +1,5 @@
 Pyinstaller resources for recentchanges <br>
-Will post any updates or findings here regarding pyinstaller and also will look into nuitka instructions <br><br>
+Will post any updates or findings here regarding pyinstaller and also will look into nuitka instructions <br>
 # Recent-Pyinstaller <br>
 <br>
 if you built a binary from the source code these .bat go with pyintaller <br>
