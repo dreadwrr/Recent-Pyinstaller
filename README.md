@@ -12,12 +12,12 @@ also the following can be removed from build <br>
 dist\main\_internal\PySide6\opengl32sw.dll <br>
 dist\main\_internal\PySide6\Qt6Quick.dll <br>
 dist\main\_internal\PySide6\Qt6Qmd.dll <br>
-dist\main\_internal\PySide6\Qt6QmlModels.dll <br><br>
+dist\main\_internal\PySide6\Qt6QmlModels.dll <br>
 dist\main\_internal\PySide6\Qt6Pdf.dll <br>
 dist\main\_internal\PySide6\Qt6Network.dll <br>
 dist\main\_internal\PySide6\Qt6OpenGl.dll <br><br>
 
-
+remove folder dist\main\_internal\PySide6\translations
 
 
 main.py is not longer needed <br>
