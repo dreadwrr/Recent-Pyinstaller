@@ -11,7 +11,7 @@ upx https://github.com/upx/upx <br><br>
 also the following can be removed from build <br>
 dist\main\_internal\PySide6\opengl32sw.dll <br>
 dist\main\_internal\PySide6\Qt6Quick.dll <br>
-dist\main\_internal\PySide6\Qt6Qmd.dll <br>
+dist\main\_internal\PySide6\Qt6Qml.dll <br>
 dist\main\_internal\PySide6\Qt6QmlModels.dll <br>
 dist\main\_internal\PySide6\Qt6Pdf.dll <br>
 dist\main\_internal\PySide6\Qt6Network.dll <br>
